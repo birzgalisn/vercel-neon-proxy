@@ -45,6 +45,7 @@ Clone the repository and navigate to the project folder:
 ```bash
 git clone https://github.com/birzgalisn/vercel-neon-proxy.git && \
 cd vercel-neon-proxy && \
+cp .env.example .env && \
 pnpm i
 ```
 
