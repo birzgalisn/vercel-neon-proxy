@@ -1,0 +1,75 @@
+diff --git a/dist/chunk-36RAWZLP.js b/dist/chunk-36RAWZLP.js
+index ed6a193720e484c639fc42421df56a3bb5b6e5ae..f31a724b086f6735e5b3e3d705e981aaf6163342 100644
+--- a/dist/chunk-36RAWZLP.js
++++ b/dist/chunk-36RAWZLP.js
+@@ -36,7 +36,8 @@ function postgresConnectionString(type = "pool") {
+   return connectionString;
+ }
+ function isPooledConnectionString(connectionString) {
+-  return connectionString.includes("-pooler.");
++  const isProxyEnabled = !!(!process.env.VERCEL_ENV && process.env.NEON_PROXY_HOST);
++  return connectionString.includes("-pooler.") || isProxyEnabled;
+ }
+ function isDirectConnectionString(connectionString) {
+   return !isPooledConnectionString(connectionString);
+@@ -47,7 +48,8 @@ function isLocalhostConnectionString(connectionString) {
+       /^postgresql:\/\//,
+       "https://"
+     );
+-    return new URL(withHttpsProtocol).hostname === "localhost";
++    const hostname = (!process.env.VERCEL_ENV && process.env.NEON_PROXY_HOST) || "localhost";
++    return new URL(withHttpsProtocol).hostname === hostname;
+   } catch (err) {
+     if (err instanceof TypeError) {
+       return false;
+diff --git a/dist/chunk-UJHSSZ4K.cjs b/dist/chunk-UJHSSZ4K.cjs
+index 7f152735f6e8429637f0ad4d2c4df4c0f5e88ed8..b9db2b637bfb2bb742c8c5251f11c8ce4e1ff7a9 100644
+--- a/dist/chunk-UJHSSZ4K.cjs
++++ b/dist/chunk-UJHSSZ4K.cjs
+@@ -36,7 +36,8 @@ function postgresConnectionString(type = "pool") {
+   return connectionString;
+ }
+ function isPooledConnectionString(connectionString) {
+-  return connectionString.includes("-pooler.");
++  const isProxyEnabled = !!(!process.env.VERCEL_ENV && process.env.NEON_PROXY_HOST);
++  return connectionString.includes("-pooler.") || isProxyEnabled;
+ }
+ function isDirectConnectionString(connectionString) {
+   return !isPooledConnectionString(connectionString);
+@@ -47,7 +48,8 @@ function isLocalhostConnectionString(connectionString) {
+       /^postgresql:\/\//,
+       "https://"
+     );
+-    return new URL(withHttpsProtocol).hostname === "localhost";
++    const hostname = (!process.env.VERCEL_ENV && process.env.NEON_PROXY_HOST) || "localhost";
++    return new URL(withHttpsProtocol).hostname === hostname;
+   } catch (err) {
+     if (err instanceof TypeError) {
+       return false;
+diff --git a/dist/index-node.js b/dist/index-node.js
+index 631d3d6bbc82c3fc8cbb7995e3b353efc1af7f4a..ebfacca0c469ddeccc0fb1746ddf8ac4eac69282 100644
+--- a/dist/index-node.js
++++ b/dist/index-node.js
+@@ -13,6 +13,22 @@ import { neonConfig } from "@neondatabase/serverless";
+ import ws from "ws";
+ if (neonConfig) {
+   neonConfig.webSocketConstructor = ws;
++  if (!process.env.VERCEL_ENV && process.env.NEON_PROXY_HOST) {
++    neonConfig.pipelineTLS = false;
++    neonConfig.pipelineConnect = false;
++    neonConfig.useSecureWebSocket = false;
++    neonConfig.wsProxy = function (host) {
++      const isNeonProxy = host === process.env.NEON_PROXY_HOST;
++      const port = isNeonProxy ? process.env.NEON_PROXY_PORT : 443;
++      return `${host}:${port}/sql`;
++    };
++    neonConfig.fetchEndpoint = function (host) {
++      const isNeonProxy = host === process.env.NEON_PROXY_HOST;
++      const protocol = isNeonProxy ? 'http' : 'https';
++      const port = isNeonProxy ? process.env.NEON_PROXY_PORT : 443;
++      return `${protocol}://${host}:${port}/sql`;
++    };
++  }
+ }
+ export {
+   VercelClient,

@@ -1,0 +1,26 @@
+{
+  "name": "vercel-neon-proxy",
+  "version": "0.0.1",
+  "scripts": {
+    "neon": "node -r dotenv/config --watch src/neon.mjs",
+    "vercel": "node -r dotenv/config --watch src/vercel.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.6.1",
+    "@vercel/postgres": "^0.7.2"
+  },
+  "engines": {
+    "npm": ">=8.0.0",
+    "node": ">=18.0.0"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@vercel/postgres@0.7.2": "patches/@vercel__postgres@0.7.2.patch"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "dotenv": "^16.4.1",
+    "prettier": "^3.2.4"
+  }
+}

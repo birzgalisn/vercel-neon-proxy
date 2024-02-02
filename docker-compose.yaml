@@ -1,0 +1,68 @@
+version: "3.9"
+
+name: vercel-neon-proxy
+
+volumes:
+  postgres_data:
+
+networks:
+  postgres_net:
+  neon_net:
+
+x-node-common: &node-common
+  image: node:20.11.0
+  volumes:
+    - .:/app
+  depends_on:
+    - neon-proxy
+  networks:
+    - neon_net
+
+services:
+  postgres:
+    image: postgres:16.1
+    # command: -d 1 # set debug-level
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_DB=$POSTGRES_DATABASE
+    networks:
+      - postgres_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DATABASE"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+
+  neon-proxy:
+    image: vercel-neon-proxy/neon-proxy:dev
+    build:
+      context: ./neon-proxy
+      dockerfile: Dockerfile
+      args:
+        - CNAME=$CNAME
+        - NEON_PROXY_HOST=$NEON_PROXY_HOST
+        - NEON_PROXY_PORT=$NEON_PROXY_PORT
+    environment:
+      - PG_CONNECTION_STRING=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_DATABASE
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      postgres_net:
+      neon_net:
+        aliases:
+          - $NEON_PROXY_HOST
+
+  test-neon:
+    <<: *node-common
+    command: >
+      sh -c "corepack enable && cd /app && pnpm neon"
+
+  test-vercel:
+    <<: *node-common
+    command: >
+      sh -c "corepack enable && cd /app && pnpm vercel"
