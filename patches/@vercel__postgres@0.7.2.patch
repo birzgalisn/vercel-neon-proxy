@@ -59,14 +59,14 @@ index 631d3d6bbc82c3fc8cbb7995e3b353efc1af7f4a..ebfacca0c469ddeccc0fb1746ddf8ac4
 +    neonConfig.pipelineConnect = false;
 +    neonConfig.useSecureWebSocket = false;
 +    neonConfig.wsProxy = function (host) {
-+      const isNeonProxy = host === process.env.NEON_PROXY_HOST;
-+      const port = isNeonProxy ? process.env.NEON_PROXY_PORT : 443;
++      const isProxyEnabled = host === process.env.NEON_PROXY_HOST;
++      const port = isProxyEnabled ? process.env.NEON_PROXY_PORT : 443;
 +      return `${host}:${port}/sql`;
 +    };
 +    neonConfig.fetchEndpoint = function (host) {
-+      const isNeonProxy = host === process.env.NEON_PROXY_HOST;
-+      const protocol = isNeonProxy ? 'http' : 'https';
-+      const port = isNeonProxy ? process.env.NEON_PROXY_PORT : 443;
++      const isProxyEnabled = host === process.env.NEON_PROXY_HOST;
++      const protocol = isProxyEnabled ? 'http' : 'https';
++      const port = isProxyEnabled ? process.env.NEON_PROXY_PORT : 443;
 +      return `${protocol}://${host}:${port}/sql`;
 +    };
 +  }
